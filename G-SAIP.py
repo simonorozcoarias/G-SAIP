@@ -96,10 +96,11 @@ def Distance(ref,subj,sizes_ref,sizes_subj,strand,sim,slen,kmer):
 
 def graphicalAlignment2(width, height, windowSize, name1, pos1, id1, name2, pos2, id2, graph_flag, result, lengthX, lengthY, kmer, mode, option, Filter, Name, image_format, div):
 
-
+    start_time = time.time()
     resultAveraged = result            
     inicial = np.mean(resultAveraged) + np.std(resultAveraged)
-
+    end_time=time.time()
+    print("submodule 1 time= ",end_time - start_time)
     # GRAY MAP TOOL
     opc = True
     contador = False
@@ -108,15 +109,23 @@ def graphicalAlignment2(width, height, windowSize, name1, pos1, id1, name2, pos2
             umbra, barSize = graytool(resultAveraged, inicial, contador)
             original_image = umbra
         else:
+            start_time=time.time()
             original_image = np.asarray(resultAveraged)
+            end_time=time.time()
+            print("submodule 2 time= ",end_time - start_time)
+        start_time=time.time()
         resize_image = scale(original_image, width, height)
+        end_time=time.time()
+        print("submodule 3 time= ",end_time - start_time)
         plt.figure()
-        
+        start_time=time.time()
         ##Esta parte para las divisiones y las etiquetas de los ejes
         idv=['Seq'+str(i) for i in range(len(id1))]
         idh=['Seq'+str(i) for i in range(len(id2))]
         vertical = np.asarray(pos1)*(height/original_image.shape[0])
         horizontal = np.asarray(pos2)*(width/original_image.shape[1])
+        end_time=time.time()
+        print("submodule 4 time= ",end_time - start_time)
         rot1,rot2=0,90
         if div:
             V,H=[],[]
@@ -135,23 +144,30 @@ def graphicalAlignment2(width, height, windowSize, name1, pos1, id1, name2, pos2
             #horizontal = H
             rot1,rot2=30,60
             idv,idh=id1,id2
+            plt.xticks(vertical,np.asarray(idv).astype('str'),rotation=rot1,fontsize=8)
+            plt.yticks(horizontal,np.asarray(idh).astype('str'),rotation=rot2,fontsize=8)
             ##############################################################
-
+        start_time=time.time()
         #print(vertical,horizontal)
         #print(id1,id2)
         plt.ylabel(str(name2))
         plt.xlabel(str(name1))
-        plt.xticks(vertical,np.asarray(idv).astype('str'),rotation=rot1,fontsize=8)
-        plt.yticks(horizontal,np.asarray(idh).astype('str'),rotation=rot2,fontsize=8)
+        #plt.xticks(vertical,np.asarray(idv).astype('str'),rotation=rot1,fontsize=8)
+        #plt.yticks(horizontal,np.asarray(idh).astype('str'),rotation=rot2,fontsize=8)
         plt.imshow(resize_image, cmap='Greys')
-
+        end_time=time.time()
+        print("submodule 5 time= ",end_time - start_time)
+        start_time=time.time()
         if Name is None:
             date = time.localtime(time.time())
             imagen = "G-SAIP" + "%04d" % date.tm_year + "%02d" % date.tm_mon + "%02d" % date.tm_mday + "%02d" % date.tm_hour + "%02d" % date.tm_min + "%02d" % date.tm_sec + "." + str(
                 image_format)
         else:
             imagen = str(Name) + "." + str(image_format)
-        plt.savefig(imagen,dpi=800,bbox_inches='tight')
+        plt.savefig(imagen)
+        end_time=time.time()
+        print("submodule 6 time= ",end_time - start_time)
+        start_time=time.time()
         if graph_flag:
             plt.show()
             # Si el usuario ingresa una bandera que quiere solo el resultad arrojado por el dotter entonces que no se haga esta parte
@@ -164,6 +180,8 @@ def graphicalAlignment2(width, height, windowSize, name1, pos1, id1, name2, pos2
         else:
             print("image saved as: " + imagen)
             opc = False
+        end_time=time.time()
+        print("submodule 7 time= ",end_time - start_time)
     return 0
 
 
