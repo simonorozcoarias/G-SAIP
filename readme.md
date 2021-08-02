@@ -24,6 +24,7 @@ conda install -c anaconda mpi4py
 Install prerequisite
 ```
 conda install -c bioconda mashmap
+conda install -c bioconda ragtag
 ```
 Finally, download G-SAIP
 ```
