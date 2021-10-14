@@ -9,7 +9,7 @@ G-SAIP was developed using Python 3.8 and with support of parallel computing usi
 
 ### Installation
 
-We highly recommend to use and install Python packages within an Anaconda enviroment. To create, execute the command below:
+We highly recommend to use and install Python3 packages within an Anaconda enviroment. To create, execute the command below:
 ```
 conda create -n G_SAIP python=3.8
 conda activate G_SAIP
