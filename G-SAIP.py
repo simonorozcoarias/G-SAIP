@@ -2,7 +2,8 @@ import sys
 import numpy as np
 from Bio import SeqIO
 import matplotlib.pyplot as plt
-import os
+from matplotlib.colors import LinearSegmentedColormap
+import os,glob 
 from os import path
 from Bio import pairwise2
 import time
@@ -12,127 +13,251 @@ import pickle
 import subprocess
 
 
-def printHelp():
-    print("\nParallel dot-plot allows to align 2 DNA fasta files in multiple CPU's ")
-    print("changing various parameters in an interactive way \n")
-    print("================================================================================\n")
-    print("        Usage: %s" % sys.argv[0])
-    print("                  -i <Sequences input file1>")
-    print("                  -a <Sequences input file2>")
-    print("                  -w WindowSize of paired bases <int> ")
-    print("                  -m Score calculation mode <string>")
-    print("                  -k K-mer value <int>")
-    print("                  -d Image width <int>")
-    print("                  -e Image height <int>")
-    print("                  -g Graphic mode <bool>")
-    print("                  -f Image filter <bool>")
-    print("                  -N Output image name <string>")
-    print("                  -F Output image format <string>")
-    print("                  -help <Extended information>")
-    print("\n")
-
-
-def seq2array(file, windowSize):
+def seq2array(file, windowSize,coord):
     te = list(SeqIO.parse(file, "fasta"))
     length = int(len(te[0].seq) / windowSize)
     length = int((len(te[0].seq) - length) / windowSize)
-    seqArray = [str(te[0].seq[windowSize * x + x:windowSize * x + x + windowSize]).upper() for x in range(0, length)]
+    seqArray = []
+    position = []
+    aux=0
+    for x in range(length):
+        inic = windowSize * x + x
+        end = windowSize * x + x + windowSize
+        seqArray.append(str(te[0].seq[inic:end]).upper())
+        for pos in coord:
+            if pos >= inic and pos<= end:
+                position.append(aux)
+        aux+=1
+    position.append(length)
+    #print(position)
 
-    return length, seqArray
+    return length, seqArray, position
 
 
-def dna_parallel_alignment(namesX,namesY,strand,threads):
+def dna_parallel_alignment(namesX,namesY,strand,threads,sim,slen,kmer,color):
     """
     Performing DNA alignment in parallel
     """
 
     if strand==0:
-        #se mueven todos los archivos horizontales contra el vertical.rank
+        #
         
-        local_result = Distance('vertical', 'horizontal', namesY, namesX,strand)
-        local_result = np.column_stack(local_result)
+        local_result = Distance('vertical', 'horizontal', namesY, namesX, strand, sim, slen, kmer, color)
+        #local_result = np.column_stack(local_result)
+        #print(local_result)
 
-    else:
-        local_result = Distance('horizontal', 'vertical', namesX, namesY,strand)
-        local_result=np.row_stack(local_result)
-
-        #se mueven los archivos de la vertical y el que queda fijo es el horizontal.rank
+    else: 
+        local_result = Distance('horizontal', 'vertical', namesX, namesY, strand, sim, slen, kmer, color)
+        #local_result=np.row_stack(local_result)
+        #print(local_result)
+        #
     return local_result
 
 
-def Distance(ref,subj,sizes_ref,sizes_subj,strand):
+def Distance(ref,subj,sizes_ref,sizes_subj,strand,sim,slen,kmer,color):
     
     ''' This function run MashMap and extract the alignment score   '''
     #print("strand:",strand)
-    result=[]
     #print(sizes_ref,sizes_subj)
-    for i in range(1,len(sizes_subj)+1): #este for itera el archivo del .rank sobre la secuencia más larga.
-        #print(i,rank-1)
-        command= "mashmap -r "+ref+"."+str(rank)+" -q "+str(subj)+"."+str(i)+" -t 1 --pi 95 -s 500 -f none"+" -o mashmap.temp."+str(rank)+"_"+str(i)
-        #command= "mashmap -r "+ref+"."+str(rank)+" -q "+str(subj)+"."+str(i)+" -t 1 --pi 95 -s 500 -k 3 -f none"+" -o mashmap.temp."+str(rank)++"_"+str(i)
-        #print(command)
-        subprocess.run(command,shell=True)
-        # me falta definir el tamaño de la matriz que voy devolver acá.
+    #for i in range(1,len(sizes_subj)+1): #este for itera el archivo del .rank sobre la secuencia más larga.
+    #print(i,rank-1)
+    #print("--pi ",sim)
+    #print("-s ",slen)
+    #print("-k ",kmer)
+    command= "mashmap -r "+ref+"."+str(rank)+" -q "+str(subj)+".unique -t 1 --pi "+str(sim)+ " -s "+str(slen)+" -k "+str(kmer)+" -f none -o mashmap.temp."+str(rank)
+    start_time=time.time()
+    subprocess.run(command,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #subprocess.run(command,shell=True)
+    # me falta definir el tamaño de la matriz que voy devolver acá.
+    #print("Clor is",color)
+    if color:
         if strand==0:
-            size = (sizes_ref[rank-1],sizes_subj[i-1])
+            size = (sizes_ref[rank-1],sizes_subj,3)
         else:
-            size = (sizes_subj[i-1],sizes_ref[rank-1])
+            size = (sizes_subj,sizes_ref[rank-1],3)
+        matrix = np.ones(size)*(np.asarray([255,255,255]).T)
+    else:
+        if strand==0:
+            size = (sizes_ref[rank-1],sizes_subj)
+        else:
+            size = (sizes_subj,sizes_ref[rank-1])
         matrix = np.zeros(size)
-        #acá debo sacar el score de los pedazos y devolver la matriz que se ha alineando
-        temp_name="mashmap.temp."+str(rank)+"_"+str(i)
-        exist = path.exists(temp_name)
-        if exist:
-            file = open(temp_name)
-            for line in file:
-                score = float(line.split()[-1])
-                row = line.split()
-                if row[4]=='+':
-                    posj= int(row[0].split('_')[-1])
-                    posi= int(row[5].split('_')[-1])
-                    if strand ==0:
+    
+    #print("Vamos a ver le tamaño de la matriz de resultados",matrix.shape)
+    end_time=time.time()
+    #acá debo sacar el score de los pedazos y devolver la matriz que se ha alineando
+    #start_time=time.time()
+    temp_name="mashmap.temp."+str(rank)
+    exist = path.exists(temp_name)
+    if exist:
+        file = open(temp_name,'r')
+        for line in file:
+            score = float(line.split()[-1]) # Este es el puntaje que retorna mashmap 95.4, 92.4, 98.2, etc.
+            row = line.split()
+            if row[4]=='+':
+                posj = int(row[0].split('_')[-1])
+                posi = int(row[5].split('_')[-1])
+                point = []
+                
+                if color:
+                    
+                    if score >= 95.0:
+                        point = [0,85,11] # Green
+                    elif score < 95.0 and score >= 40.0:
+                        point = [0,211,67] #215,102,0]  # Yellow
+                    else:
+                        point = [249, 233, 50]
+                
+                    if strand == 0:
+                        #print(posi,posj)
+                        matrix[posi][posj][:] = point #(score*255)/100
+                    else:
+                        #print(posj,posi)
+                        matrix[posj][posi][:] = point #(score*255)/100
+                else: 
+                    
+                    if strand == 0:
                         #print(posi,posj)
                         matrix[posi][posj] = (score*255)/100
                     else:
                         #print(posj,posi)
-                        matrix[posj][posi] = (score*255)/100
-            file.close()
-            os.remove(temp_name)
-        result.append(matrix)
-        #plt.imshow(matrix)
-        #plt.savefig("imagen"+str(rank)+"_Proc:"+str(i))
-        matrix=None
-    return result
+                        matrix[posj][posi] = (score*255)/100 # (score*255)/100
+                
+        file.close()
+        os.remove(temp_name)
+    return matrix
 
 
-def graphicalAlignment2(width, height, windowSize, name1, name2, graph_flag, result, lengthX, lengthY, kmer, mode, option, Filter, Name, image_format):
+def graphicalAlignment2(width, height, windowSize, name1, pos1, id1, name2, pos2, id2, graph_flag, result, lengthX, lengthY, kmer, mode, option, Filter, Name, image_format, div, inic1, inic2,sim,cl):
 
-
+    start_time = time.time()
     resultAveraged = result            
     inicial = np.mean(resultAveraged) + np.std(resultAveraged)
-
+    end_time=time.time()
+    #print("submodule 1 time= ",end_time - start_time)
     # GRAY MAP TOOL
     opc = True
     contador = False
     while (opc):
-        if Filter:
+        if Filter and not cl:
             umbra, barSize = graytool(resultAveraged, inicial, contador)
             original_image = umbra
         else:
+            start_time=time.time()
             original_image = np.asarray(resultAveraged)
-        resize_image = scale(original_image, width, height)
+            end_time=time.time()
+            #print("submodule 2 time= ",end_time - start_time)
+        start_time=time.time()
+        
+        if cl and not Filter:
+            resize_image = original_image #np.zeros([width,height,3])
+            #resize_image[:,:,0] = scale(original_image[:][:][0], width, height)
+            #resize_image[:,:,1] = scale(original_image[:][:][1], width, height)
+            #resize_image[:,:,2] = scale(original_image[:][:][2], width, height)
+            width = original_image.shape[1]
+            height = original_image.shape[0]
+        else:
+            resize_image = scale(original_image, width, height) 
+        #
+        
+        end_time=time.time()
+        #print("submodule 3 time= ",end_time - start_time)
         plt.figure()
-        plt.imshow(resize_image, cmap='Greys')
-        plt.title("G-SAIP -" + str(name1) + " Vs " + str(name2) + "-")
+        
+        start_time=time.time()
+        ##Esta parte para las divisiones y las etiquetas de los ejes
+        idv=['Seq'+str(i) for i in range(len(id1))]
+        idh=['Seq'+str(i) for i in range(len(id2))]
+        vertical = np.asarray(pos1)*(height/original_image.shape[0])
+        horizontal = np.asarray(pos2)*(width/original_image.shape[1])
+        end_time=time.time()
+        #print("submodule 4 time= ",end_time - start_time)
+        V,H=[],[]
+        for i in range(len(vertical)-1):
+            V.append(((vertical[i+1]-vertical[i])/2)+vertical[i])
+        #V.append((vertical[len(vertical)]-vertical[len(vertical)-1]/2)+vertical[len(vertical)-1])
+        for i in range(len(horizontal)-1):
+            H.append(((horizontal[i+1]-horizontal[i])/2)+horizontal[i])
+        #H.append((horizontal[len(horizontal)]-horizontal[len(horizontal)-1]/2)+horizontal[len(horizontal)-1])
+        if div:
+            
+            for coor in vertical:
+                plt.axvline(coor, ymin=0, ymax=height,color='k')
+
+            for coor in horizontal:
+                plt.axhline(coor, xmin=0, xmax=width,color='k')
+            #vertical = V
+            #horizontal = H
+            idv,idh=id1,id2
+        #print("Inic1 values are:",inic1)
+        sufi, sufi2 = ' Mb', ' Mb'
+        scaler, scaler2 = 1000000, 1000000
+        '''
+        if max(inic1) < 1000000:
+            sufi = 'Kb'
+            scaler = 1000
+        else:
+            sufi = 'Mb'
+            scaler = 1000000
+        
+        if max(inic2) < 1000000:
+            sufi2 = 'Kb'
+            scaler2 = 1000
+        else:
+            sufi2 = 'Mb'
+            scaler2 = 1000000
+        '''
+        vertical_etique = [str(int(i/scaler)) + sufi for i in inic1]
+        #print(vertical_etique)
+        horizontal_etique = [str(int(i/scaler2)) + sufi2 for i in inic2]
+        #print(horizontal_etique)
+        #plt.xticks(vertical,np.asarray(vertical_etique),fontsize=8)
+        #plt.yticks(horizontal,np.asarray(horizontal_etique),fontsize=8)
+            #######################################################################################Z###############
+        #print("vertical",vertical)
+        #print("final1",final1)
+        #plt.xticks(vertical,np.asarray(final1),fontsize=8)
+        #plt.yticks(horizontal,np.asarray(final2),fontsize=8)
+        start_time=time.time()
         plt.ylabel(str(name2))
         plt.xlabel(str(name1))
-        ##PonerParametro
+        ax = plt.gca()
+        ax.axes.xaxis.set_ticks([])
+        ax.axes.yaxis.set_ticks([])
+        parameters = name1+'_Vs_'+name2+'_'+str(kmer)+'_Kmers'+'Window_size_'+str(windowSize)+'_Size_'+str(width)+'x'+str(height)+'_Iden_'+str(sim)
+        
+        #plt.xticks(vertical,np.asarray(idv).astype('str'),rotation=rot1,fontsize=8)
+        #plt.yticks(horizontal,np.asarray(idh).astype('str'),rotation=rot2,fontsize=8)
+        #print(resize_image.shape)
+        #print()
+        if cl:
+            colors = [(0.9765, 0.6563, 0.196), (0,0.827,0.2627), (0,0.333,0.043)]  # R -> G -> B
+            n_bin = 3  # Discretizes the interpolation into bins
+            cmap_name = 'my_list'
+            mymap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bin)
+            plt.imshow(resize_image/255,cmap=mymap)
+            #plt.text(0-300, width+135,parameters,fontsize=8,ha='left',wrap=True)
+            plt.title(parameters,fontsize=8)
+            plt.colorbar()
+        else:
+            plt.imshow(resize_image, cmap='Greys')
+            #plt.text(0-300, width+135,parameters,fontsize=8,ha='left',wrap=True)
+            plt.title(parameters,fontsize=8)
+        
+        end_time=time.time()
+        #print("submodule 5 time= ",end_time - start_time)
+        start_time=time.time()
         if Name is None:
             date = time.localtime(time.time())
-            imagen = "G-SAIP" + "%04d" % date.tm_year + "%02d" % date.tm_mon + "%02d" % date.tm_mday + "%02d" % date.tm_hour + "%02d" % date.tm_min + "%02d" % date.tm_sec + "." + str(
-                image_format)
+            #imagen = "G-SAIP" + "%04d" % date.tm_year + "%02d" % date.tm_mon + "%02d" % date.tm_mday + "%02d" % date.tm_hour + "%02d" % date.tm_min + "%02d" % date.tm_sec + "." + str(
+            #    image_format)
+            imagen = "G-SAIP_" + str(parameters) + "." + str(image_format)
         else:
             imagen = str(Name) + "." + str(image_format)
         plt.savefig(imagen)
+        end_time=time.time()
+        #print("submodule 6 time= ",end_time - start_time)
+        start_time=time.time()
         if graph_flag:
             plt.show()
             # Si el usuario ingresa una bandera que quiere solo el resultad arrojado por el dotter entonces que no se haga esta parte
@@ -145,6 +270,8 @@ def graphicalAlignment2(width, height, windowSize, name1, name2, graph_flag, res
         else:
             print("image saved as: " + imagen)
             opc = False
+        end_time=time.time()
+        #print("submodule 7 time= ",end_time - start_time)
     return 0
 
 
@@ -190,18 +317,20 @@ def join_seq(file):
     te = list(SeqIO.parse(file, "fasta"))
     sec, inicio, fin, id, pos_fin = '', [0], [], [], 0
     for tes in te:
-        id.append(str(tes.id))
+        id.append(str(tes.id)[:15]+'...')
         pos_fin = pos_fin + (len(tes.seq))
         sec = sec + str(tes.seq)
         fin.append(pos_fin - 1)
         inicio.append(pos_fin)
-    fin.append(0)
     size = len(sec)
+    fin.append(size)
     # Cuando se vayan a identificar las secuncias se debe tener en cuenta que no se debe tomar la ultima posicion del
     # vector inicio ya que esta seria el final de las secuencias y por eso se le pone 0 a lo ultimo en el vector fin
     f.write(">" + name + ":" + str(len(sec)) + "\n")
     f.write(sec)
     f.close()
+    #print("vector fin: ",fin)
+    #print("El tamaño es: ",size)
     return fasta_file, name, inicio, fin, id, size
 
 def extract_name(file):
@@ -232,17 +361,12 @@ def send_mpi_msg(destination, data, serialize=False):
     if serialize: data = pickle.dumps(data)
     comm.send(data, dest=destination)
 
-def CreateFiles(seqs_per_procs,Arrayseqs,length,type_seq,threads,n):
-    # Seqs_per_procs = int number of sequences per process
-    # Arrayseqs = array with each slice of sequences to align
-    # length = Arrayseq length
-    # type_seq = whereas query or subject sequence
-    # threads = number of process.
-
+def CreateFiles(seqs_per_procs,ArraySplit,ArrayUnique,lengthSplit,lengthUnique,typeSplit,typeUnique,threads,n):
+    # ESe divide en Rank pedazos el vertical
     procs = threads -1
     init = 0
     end = 0
-    names = []
+    namesS = []
     remain = n % (threads-1)
     for i in range(0,threads-1):  
         if i < remain:
@@ -251,21 +375,27 @@ def CreateFiles(seqs_per_procs,Arrayseqs,length,type_seq,threads,n):
         else:
             init = i * seqs_per_procs + remain
             end = init + seqs_per_procs
-        if end > length:
-            end = length
-        fasta_name = str(type_seq)+"."+str(i+1)
+        if end > lengthSplit:
+            end = lengthSplit
+        fasta_name = str(typeSplit)+"."+str(i+1)
         file = open(fasta_name,"w")
         num_slices=0
         for j in range(init,end):
-            file.write(">"+"pos_"+str(type_seq)+"_"+str(j)+"_"+str(num_slices)+"\n"+Arrayseqs[j]+"\n")
+            file.write(">pos_"+str(typeSplit)+"_"+str(j)+"_"+str(num_slices)+"\n"+ArraySplit[j]+"\n")
             num_slices+=1
         file.close()
-        names.append(num_slices)
-    return names
-
-
-
-
+        namesS.append(num_slices)
+    # Ahora solo 1 horizontal donde están todas las secuencias
+    namesU = 0
+    num_slices = 0
+    fasta_name = str(typeUnique)+".unique"
+    file = open(fasta_name,"w")
+    for j,seq in enumerate(ArrayUnique):
+        file.write(">pos"+str(typeUnique)+"_"+str(j)+"_"+str(j)+"\n"+seq+"\n")
+        num_slices+=1
+    file.close()
+    namesU=num_slices
+    return namesS,namesU
 
 def main():
     """
@@ -283,22 +413,26 @@ def main():
     #######################################################################
     #print(threads)
     # Declaramos las variables inicales
-    usage = "usage: python G-SAIP.py -q file.fasta ... [options]"
+    usage = "usage: mpirun -np <threads> python3 G-SAIP.py -q file.fasta ... [options]"
     parser = OptionParser(usage=usage)
 
     parser.add_option('-q', '--query', dest='file1', type=str, default=None, help='Query sequence in FASTA format')
-    parser.add_option('-s', '--subject', dest='file2', type=str, default=None, help='Subject sequence in FASTA format')
+    parser.add_option('-s', '--subject', dest='file2', type=str, default=None, help='Reference sequence in FASTA format')
     parser.add_option('-w', '--window', dest='window', type=int, default=None, help='Window size')
-    parser.add_option('-k', '--kmer', dest='kmer', type=int, default=3, help='kmer value')
+    parser.add_option('-k', '--kmer', dest='kmer', type=int, default=16, help='Mashmap kmer value')
     parser.add_option('-m', '--mode', dest='option', type=str, default=None, help='Calculation score mode')
+    parser.add_option('-Q', '--esamble', dest='ens', type=str, default='FALSE', help='Ensambling quality verification')
     parser.add_option('-i', '--width', dest='width', type=int, default=1024, help='Output image width')
     parser.add_option('-e', '--height', dest='height', type=int, default=1024, help='Output image height')
     parser.add_option('-g', '--graphic', dest='graph', type=str, default='FALSE', help='Interactive mode')
     parser.add_option('-f', '--filter', dest='Filter', type=str, default='FALSE', help='Apply default filter')
     parser.add_option('-n', '--name', dest='Name', type=str, default=None, help='Output image name')
-    parser.add_option('-o', '--format', dest='image_format', type=str, default='png',
-                      help='Specify the output image format')
-
+    parser.add_option('-o', '--format', dest='image_format', type=str, default='png', help='Specify the output image format')
+    parser.add_option('-p', '--pidentity', dest='sim', type=int, default=95, help='Mashmap similarity percentage')
+    parser.add_option('-d', '--divisions', dest='div', type=str, default='FALSE', help='Draw sequences limits')
+    parser.add_option('-S', '--segmentlen', dest='slen', type=int, default=500, help='Mashmap segment length')
+    parser.add_option('-c', '--colorbar', dest='color', type=str, default='FALSE', help='Output dotplot with colours and colorbar')
+    
     (options, arguments) = parser.parse_args()
 
     file1 = options.file1
@@ -306,24 +440,58 @@ def main():
     window = options.window
     kmer = options.kmer
     option = options.option
+    ens = options.ens
     width = options.width
     height = options.height
     graph = options.graph
     Filter = options.Filter
     Name = options.Name
     image_format = options.image_format
+    sim = options.sim
+    div = options.div
+    slen = options.slen
+    color = options.color
 
     size1, size2 = 0, 0
     joined_file1, joined_file2, name1, name2, inic1, inic2, fin1, fin2, id1, id2 = '', '', '', '', None, None, None, None, None, None
-
+    
     if file1 is not None:
-        joined_file1, name1, inic1, fin1, id1, size1 = join_seq(file1)
+        if rank == 0:  
+            joined_file1, name1, inic1, fin1, id1, size1 = join_seq(file1)
+            for m in range(1,threads):
+                send_mpi_msg(m,[joined_file1, name1, inic1, fin1, id1, size1],serialize=True)
+        else:
+            a = receive_mpi_msg(deserialize=True)
+            [joined_file1, name1, inic1, fin1, id1, size1] = a['data']
+        
     else:
-        print("Please insert at least a Query file in FASTA format")
+        if rank == 0:
+            print("Please insert at least a Query file in FASTA format")
         sys.exit(1)
+    
+    if ((ens.upper() == 'TRUE') or (str(ens)== '1')) and  file2 is not None:
+        if file1 is not None and file2 is not None and rank==0:
+            print('Utility for quality assembling selected,\n ordering assembling berfore make dotplot')
+            hfile1 = file1.split('.')[0] # Solo se usa el file 1 ya que es el query porque la referencia no importa para el nombre
+            ragtag = "ragtag.py scaffold "+ str(file2) + " " + str(file1) + " -t " + str(threads-1) + " -o " + hfile1
+            subprocess.run(ragtag,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            file2 = hfile1+"/ragtag.scaffold.fasta"
+    elif (ens.upper() == 'FALSE') or (str(ens)== '0'):
+        if rank == 0:
+            print("Assembly quality verification module disabled")
+    else:
+        if rank==0:
+            print("Assembly quality paramenter is incorrect, insert  true or false")
+        sys.exit(4)
 
     if file2 is not None:
-        joined_file2, name2, inic2, fin2, id2, size2 = join_seq(file2)
+        if rank == 0:  
+            joined_file2, name2, inic2, fin2, id2, size2 = join_seq(file2)
+            for m in range(1,threads):
+                send_mpi_msg(m,[joined_file2, name2, inic2, fin2, id2, size2],serialize=True)
+        else:
+            a = receive_mpi_msg(deserialize=True)
+            [joined_file2, name2, inic2, fin2, id2, size2] = a['data']
 
     if file1 != '' and file2 is None:
         joined_file2, name2, inic2, fin2, id2, size2 = joined_file1, name1, inic1, fin1, id1, size1
@@ -336,12 +504,16 @@ def main():
         elif option.upper() == 'VERY-FAST':
             mode = 2
         else:
-            print("Insert a valid option for calculation mode")
+            if rank == 0:
+                print("Insert a valid option for calculation mode")
             sys.exit(4)
         print("Calculation mode: ", option)
 
+    #print("file1",file1)
+    #print("file2",file2)
     if image_format.lower() != 'png' and image_format.lower() != 'pdf' and image_format.lower() != 'svg':
-        print("Insert a valid image format: svg,png or pdf")
+        if rank == 0:
+            print("Insert a valid image format: svg,png or pdf")
         sys.exit(4)
     else:
         image_format = image_format.lower()
@@ -351,7 +523,8 @@ def main():
     elif (graph.upper() == 'FALSE') or (str(graph) == '0'):
         graph = False
     else:
-        print("Insert True or 1 if you wish run with interactive mode")
+        if rank == 0:
+            print("Insert True or 1 if you wish run with interactive mode")
         sys.exit(3)
 
     if (Filter.upper() == 'TRUE') or (str(Filter) == '1'):
@@ -359,36 +532,60 @@ def main():
     elif (Filter.upper() == 'FALSE') or (str(Filter) == '0'):
         Filter = False
     else:
-        print("Insert True or 1 if you wish run with filter mode")
+        if rank == 0:
+            print("Insert True or 1 if you wish run with filter mode")
+        sys.exit(3)
+    
+    
+
+    if (div.upper() == 'TRUE') or (str(div) == '1'):
+        div = True
+    elif (div.upper() == 'FALSE') or (str(div) == '0'):
+        div = False
+    else:
+        if rank == 0:
+            print("Insert True or 1 if you wish to draw sequences dvision")
+        sys.exit(3)
+        
+    if (color.upper() == 'TRUE') or (str(color) == '1'):
+        color = True
+    elif (color.upper() == 'FALSE') or (str(color) == '0'):
+        color = False
+    else:
+        if rank == 0:
+            print("Insert True or 1 if you wish to draw dotplot with colors")
         sys.exit(3)
 
     # Here, we define the score calculation mode according to the secuences size. OJO PARA el MANUAL de usuario
     if option is None:
         if size1 >= 1e6 or size2 >= 1e6:  # Fast mode with medium detail
             mode = 2
-            kmer = 0
+            #kmer = 0
             option = 'VERY-FAST'
             if rank == 0: print(rank_msg + " Default calculation mode: VERY-FAST")
         elif size1 > 50000 or size2 > 50000:
             mode = 1
+            kmer = 5
             option = 'FAST'
             if rank == 0: print(rank_msg + " Default calculation mode: FAST")
         else:  # Slow mode is choosen
             mode = 0
-            kmer = 0
+            kmer = 5
             option = 'SLOW'
             if rank == 0: print(rank_msg + " Default calculation mode: SLOW")
 
     sizes = [size1, size2]
-    # print("secuencias len: ", sizes)
-    if min(sizes) <= 1000 and window is None:  # Secuencias de 1000 bases
+    #print("secuencias len: ", sizes)
+    if min(sizes) <= 10000 and window is None:  # Secuencias de 10000 bases
         mode = 0  # No se puede hacer con el fast
-        kmer = 0
+        #kmer = 0
         window = int(
             min(sizes) * 0.1) + 1  # 1 % de la longitud de la secuencia el +1 es por si el 0.01 % da por debajo de 1
     elif window is None:
         window = int(min(sizes) / 512)
-
+        if window < 500:
+            window = 500
+    #print("Window: ",window)
     if mode == 1 and window <= kmer:  # Condicionar que el kmer no puede ser mayor a la ventana, y decir que use otro método.
         if rank == 0:
             print(rank_msg + " window: ", window, " Kmer: ", kmer)
@@ -397,19 +594,26 @@ def main():
         sys.exit(5)
 
     if joined_file1 != '' and joined_file2 != '':
-        lengthX, seq1Array = seq2array(joined_file1, window)
-        lengthY, seq2Array = seq2array(joined_file2, window)
-        #namesX,namesY = [],[]
-        if rank == 0: print(rank_msg + " finished creating seq Array")
-        if lengthX >= lengthY:
-            n = lengthX
-            strand = 0
+        #######################################################################
+        #### MPI parallel region
+        if rank == 0:
+            lengthX, seq1Array, PositionX = seq2array(joined_file1, window, inic1)
+            lengthY, seq2Array, PositionY = seq2array(joined_file2, window, inic2)
+            #print(PositionY)
+            print(rank_msg + " finished creating seq Array")
+            if lengthX >= lengthY:
+                n = lengthX
+                strand = 0
+            else:
+                n = lengthY
+                strand = 1
+            end_time = time.time()
+            print(rank_msg + " module 1 time=", end_time - start_time)
+            for m in range(1, threads):
+                send_mpi_msg(m,[lengthX, lengthY, strand, n],serialize=True)
         else:
-            n = lengthY
-            strand = 1
-        end_time = time.time()
-        if rank == 0: print(rank_msg + " module 1 time=", end_time - start_time)
-
+            a = receive_mpi_msg(deserialize=True)
+            [lengthX, lengthY, strand, n] = a['data']
         
 
         #######################################################################
@@ -417,9 +621,11 @@ def main():
         start_time = time.time()
         seqs_per_procs = int(n / (threads-1))
         
-        if rank == 0:  
-            namesX = CreateFiles(seqs_per_procs,seq1Array,lengthX,"horizontal",threads,n)
-            namesY = CreateFiles(seqs_per_procs,seq2Array,lengthY,"vertical",threads,n)
+        if rank == 0: 
+            if strand==0:  # Esto quiere decir que la más larga es la horizontal, por lo tanto vamos a partir en Rank pedazos la vertical y la horizontal queda toda en un archivo.
+                namesY,namesX=CreateFiles(seqs_per_procs,seq2Array,seq1Array,lengthY,lengthX,"vertical","horizontal",threads,n)
+            else:
+                namesX,namesY=CreateFiles(seqs_per_procs,seq1Array,seq2Array,lengthX,lengthY,"horizontal","vertical",threads,n)
             for m in range(1,threads):
                 send_mpi_msg(m,[namesX,namesY],serialize=True)
 
@@ -435,7 +641,7 @@ def main():
             a=receive_mpi_msg(deserialize=True)
             [namesX,namesY]=a['data']
             # execute sequence alignment using MPI
-            local_result = dna_parallel_alignment(namesX,namesY,strand,threads)
+            local_result = dna_parallel_alignment(namesX,namesY,strand,threads,sim,slen,kmer,color)
             send_mpi_msg(0, local_result, serialize=True)
             
         end_time = time.time()
@@ -451,34 +657,38 @@ def main():
                 result = np.column_stack(results)  # vertical
             lengthY = result.shape[1]
             lengthX = result.shape[0]
-            print(lengthX,lengthY)
+            #print(lengthX,lengthY)
             print(rank_msg + " finished creating matrix")
             end_time = time.time()
             print(rank_msg + " module 3 time=", end_time - start_time)
             # create images with created score matrix
             start_time = time.time()
-            graphicalAlignment2(width, height, window, name1, name2, graph, result, lengthX, lengthY, kmer, mode,
-                                option, Filter, Name, image_format)
+            graphicalAlignment2(width, height, window, name1, PositionX, id1, name2, PositionY, id2, graph, result, lengthX, lengthY, kmer, mode,
+                                option, Filter, Name, image_format, div,inic1,inic2,sim,color)
             end_time = time.time()
             print(rank_msg + " module 4 time=", end_time - start_time)
             # deleting joined_files
+            start_time=time.time()
             if joined_file1 == joined_file2:
                 os.remove(joined_file1)
             else:
                 os.remove(joined_file1)
                 os.remove(joined_file2)
+            
             # deleting vertical and horizontal files
-            for index in range(1,threads):
-                os.remove("horizontal."+str(index))
-                os.remove("vertical."+str(index))
 
+            files = glob.glob("horizontal*") + glob.glob("vertical*") + glob.glob("core.*") 
+            for file in files:
+                os.remove(file)
+            end_time=time.time()
+            print("Removing files time= ",end_time - start_time)
         comm.Barrier()
         
     else:
         if rank == 0:
             print(rank_msg + " Please insert the sequences to align")
             print(
-                "Usage: -i <Sequence input file1> -a <Sequence input file2> -w WindowSize <int> -t num_threads <int> -k kmer_value <int> -m score_calculation_mode <str> -d <width> -e <height> -g interactive mode <bool> -f apply_filter <bool> -N output_name <str> -F output_format <str> -help <More info>")
+                "Usage: mpirun -np <threads> python3 -q <Sequence input file1> -s <Sequence input file2>  or \n mpirun -np <threads> python3 -h <More info>")
         sys.exit(3)
 
 
