@@ -1,0 +1,11 @@
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 3.1695499420166016
+[rank 0 msg] module 2 time= 63.415075063705444
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.001840353012084961
+Resized image size :  (1024, 1024)
+image saved as: Droso.png
+[rank 0 msg] module 4 time= 1.4226734638214111
+Removing files time=  0.0660409927368164
+Run 1 execution time: = 72 secs.

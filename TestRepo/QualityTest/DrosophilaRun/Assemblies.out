@@ -1,0 +1,154 @@
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 15.54687786102295
+[rank 0 msg] module 2 time= 18.304691791534424
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.005139589309692383
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsAbyss_droso-k31.fa.png
+[rank 0 msg] module 4 time= 1.9239585399627686
+Removing files time=  0.14968156814575195
+file Abyss_droso-k31.fa execution time: = 63 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 10.788145303726196
+[rank 0 msg] module 2 time= 20.575381994247437
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.0045146942138671875
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsAbyss_droso-k51.fa.png
+[rank 0 msg] module 4 time= 1.754382848739624
+Removing files time=  0.14734625816345215
+file Abyss_droso-k51.fa execution time: = 61 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 9.935897588729858
+[rank 0 msg] module 2 time= 20.05633544921875
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.003268003463745117
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsAbyss_droso-k71.fa.png
+[rank 0 msg] module 4 time= 1.7253990173339844
+Removing files time=  0.20938801765441895
+file Abyss_droso-k71.fa execution time: = 60 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 10.529412031173706
+[rank 0 msg] module 2 time= 18.5146005153656
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.0015387535095214844
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsAbyss_droso-k91.fa.png
+[rank 0 msg] module 4 time= 1.7497482299804688
+Removing files time=  0.24654507637023926
+file Abyss_droso-k91.fa execution time: = 58 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 6.824335098266602
+[rank 0 msg] module 2 time= 18.552847146987915
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.0026786327362060547
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsmasu_droso-ka.fa.png
+[rank 0 msg] module 4 time= 1.8051772117614746
+Removing files time=  0.18736696243286133
+file masu_droso-ka.fa execution time: = 53 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 5.36647891998291
+[rank 0 msg] module 2 time= 17.326435327529907
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.0020945072174072266
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsmega_droso-final.fa.png
+[rank 0 msg] module 4 time= 1.7552013397216797
+Removing files time=  0.16549992561340332
+file mega_droso-final.fa execution time: = 50 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 29.15091323852539
+[rank 0 msg] module 2 time= 36.41312909126282
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.002556324005126953
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsmega_droso-k31.fa.png
+[rank 0 msg] module 4 time= 1.7513444423675537
+Removing files time=  0.15839362144470215
+file mega_droso-k31.fa execution time: = 93 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 23.446682929992676
+[rank 0 msg] module 2 time= 116.742262840271
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.003752470016479492
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsmega_droso-k51.fa.png
+[rank 0 msg] module 4 time= 1.7700591087341309
+Removing files time=  0.16853785514831543
+file mega_droso-k51.fa execution time: = 169 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 18.058370351791382
+[rank 0 msg] module 2 time= 131.84533882141113
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.003236055374145508
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsmega_droso-k71.fa.png
+[rank 0 msg] module 4 time= 1.7787446975708008
+Removing files time=  0.1413419246673584
+file mega_droso-k71.fa execution time: = 178 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 8.605729103088379
+[rank 0 msg] module 2 time= 21.917974948883057
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.005765199661254883
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsmega_droso-k91.fa.png
+[rank 0 msg] module 4 time= 1.7825827598571777
+Removing files time=  0.14571762084960938
+file mega_droso-k91.fa execution time: = 60 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 5.758099794387817
+[rank 0 msg] module 2 time= 15.619001388549805
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.001569986343383789
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsvelvet_droso-k31.fa.png
+[rank 0 msg] module 4 time= 1.6849524974822998
+Removing files time=  0.20847058296203613
+file velvet_droso-k31.fa execution time: = 51 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 6.000174283981323
+[rank 0 msg] module 2 time= 17.32012915611267
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.0023910999298095703
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsvelvet_droso-k51.fa.png
+[rank 0 msg] module 4 time= 2.0286645889282227
+Removing files time=  0.17266607284545898
+file velvet_droso-k51.fa execution time: = 54 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 6.6612324714660645
+[rank 0 msg] module 2 time= 15.901599168777466
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.003512144088745117
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsvelvet_droso-k71.fa.png
+[rank 0 msg] module 4 time= 1.8321986198425293
+Removing files time=  0.19587302207946777
+file velvet_droso-k71.fa execution time: = 52 secs.
+[rank 0 msg] Default calculation mode: VERY-FAST
+[rank 0 msg] finished creating seq Array
+[rank 0 msg] module 1 time= 2.9012112617492676
+[rank 0 msg] module 2 time= 12.890402555465698
+[rank 0 msg] finished creating matrix
+[rank 0 msg] module 3 time= 0.0003743171691894531
+Resized image size :  (1024, 1024)
+image saved as: DrosoVsvelvet_droso-k91.fa.png
+[rank 0 msg] module 4 time= 1.6491143703460693
+Removing files time=  0.378037691116333
+file velvet_droso-k91.fa execution time: = 47 secs.

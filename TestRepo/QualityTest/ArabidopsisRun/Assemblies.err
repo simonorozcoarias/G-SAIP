@@ -1,0 +1,41 @@
+
+CommandNotFoundError: Your shell has not been properly configured to use 'conda activate'.
+To initialize your shell, run
+
+    $ conda init <SHELL_NAME>
+
+Currently supported shells are:
+  - bash
+  - fish
+  - tcsh
+  - xonsh
+  - zsh
+  - powershell
+
+See 'conda init --help' for more information and options.
+
+IMPORTANT: You may need to close and restart your shell after running 'conda init'.
+
+
+/shared/home/rguyot/.local/lib/python3.9/site-packages/numpy/core/fromnumeric.py:3419: RuntimeWarning: Mean of empty slice.
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/shared/home/rguyot/.local/lib/python3.9/site-packages/numpy/core/_methods.py:188: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+/shared/home/rguyot/.local/lib/python3.9/site-packages/numpy/core/_methods.py:261: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/shared/home/rguyot/.local/lib/python3.9/site-packages/numpy/core/_methods.py:221: RuntimeWarning: invalid value encountered in true_divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean, casting='unsafe',
+/shared/home/rguyot/.local/lib/python3.9/site-packages/numpy/core/_methods.py:253: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+Traceback (most recent call last):
+  File "/shared/ifbstor1/projects/coffea_genomes/Simon/G-SAIP/2021/Arab/../G-SAIP.py", line 695, in <module>
+    main()
+  File "/shared/ifbstor1/projects/coffea_genomes/Simon/G-SAIP/2021/Arab/../G-SAIP.py", line 665, in main
+    graphicalAlignment2(width, height, window, name1, PositionX, id1, name2, PositionY, id2, graph, result, lengthX, lengthY, kmer, mode,
+  File "/shared/ifbstor1/projects/coffea_genomes/Simon/G-SAIP/2021/Arab/../G-SAIP.py", line 160, in graphicalAlignment2
+    resize_image = scale(original_image, width, height) 
+  File "/shared/ifbstor1/projects/coffea_genomes/Simon/G-SAIP/2021/Arab/../G-SAIP.py", line 303, in scale
+    resize_image[W][H] = original_image[new_width][new_height]
+IndexError: index 0 is out of bounds for axis 0 with size 0
+slurmstepd: error: *** JOB 19538021 ON cpu-node-69 CANCELLED AT 2021-10-28T18:47:00 ***
+mpirun: Forwarding signal 18 to job
