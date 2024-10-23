@@ -1,6 +1,6 @@
 # G-SAIP: Graphical Sequence Alignment in Parallel
 
-an HPC-based strategy to perform graphical pairwise sequence alignment to speed up execution times at genomic level, in order to provide tools for analyzing huge amount of data produced by large scale projects such as the 10K plant genomes, and the Earth BioGenome.
+An HPC-based strategy to perform graphical pairwise sequence alignment to speed up execution times at genomic level, in order to provide tools for analyzing huge amount of data produced by large scale projects such as the 10K plant genomes, and the Earth BioGenome.
 
 ### Prerequisites
 
@@ -38,3 +38,7 @@ mpirun -np 1 python3 G-SAIP.py -h
 ```
 Usage: mpirun -np <threads> python3 G-SAIP.py -q file.fasta ... [options]
 
+## Citation
+If you use this software, or a part of it, please cite us as following:
+
+* Piña, J. S., Orozco-Arias, S., Tobón-Orozco, N., Camargo-Forero, L., Tabares-Soto, R., & Guyot, R. (2023). G-SAIP: Graphical Sequence Alignment Through Parallel Programming in the Post-Genomic Era. Evolutionary Bioinformatics, 19, 11769343221150585.
